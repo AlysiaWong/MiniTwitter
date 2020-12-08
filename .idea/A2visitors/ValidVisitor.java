@@ -13,7 +13,6 @@ public class ValidVisitor implements UserComponentVisitor {
     public int visit(User userVisitor) {
         if(userVisitor.getID().contains(" ")){
             validation = 0;
-            return validation;
         }
         return validation;
     }
@@ -22,7 +21,6 @@ public class ValidVisitor implements UserComponentVisitor {
     public int visit(UserGroup userGroupVisitor) {
         if(userGroupVisitor.getID().contains(" ")){
             validation = 0;
-            return validation;
         }
         return validation;
     }
