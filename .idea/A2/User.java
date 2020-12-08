@@ -1,4 +1,6 @@
-package minitwitter;
+package A2;
+
+import A2visitors.UserComponentVisitor;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,6 +17,8 @@ public class User extends Subject implements UserComponent, Observer {
     private List<User> followings;
     private String messages;
     private List<String> feed;
+    private long creationTime; // HW 3 #2
+    private long lastUpdateTime; // HW 3 #3
 
     public User(){
         userCount++;
@@ -22,6 +26,7 @@ public class User extends Subject implements UserComponent, Observer {
         followings = new ArrayList<>();
         messages = "";
         feed = new ArrayList<>();
+        this.creationTime = System.currentTimeMillis(); // HW 3 #2 -- new User created
     }
 
     public User(String newID){
@@ -31,6 +36,7 @@ public class User extends Subject implements UserComponent, Observer {
         followings = new ArrayList<>();
         messages = "";
         feed = new ArrayList<>();
+        this.creationTime = System.currentTimeMillis(); // HW 3 #2 -- new User created
     }
 
     public int getUserCount(){
@@ -72,6 +78,7 @@ public class User extends Subject implements UserComponent, Observer {
     }
 
     public void setMessages(String myMessages){
+        lastUpdateTime = System.currentTimeMillis(); // HW 3 #3 -- new tweet posted
         messages = myMessages;
         notifyObservers();
         if(messages.contains("good") || messages.contains("great") || messages.contains("positive") || messages.contains(":)") ){
@@ -85,15 +92,17 @@ public class User extends Subject implements UserComponent, Observer {
     }
 
     public void setFeed(String message){
+        lastUpdateTime = System.currentTimeMillis(); // HW 3 #3 -- new tweet posted (user and followers)
         feed.add(message);
     }
 
     // OBSERVER PATTERN -- observe feed of followings
-   public void update(Subject subject) {
+    public void update(Subject subject) {
         if(subject instanceof User){
             System.out.println(((User) subject).getID() + "'s New Message: " + ((User) subject).getMessages());
             for(int i = 0 ; i < ((User) subject).getFollowers().size() ; i++){ // for all followers, update feed
-                ((User) subject).getFollowers().get(i).setFeed(((User) subject).getMessages());
+                ((User) subject).getFollowers().get(i).setFeed(((User) subject).getMessages() + " Updated: " + lastUpdateTime);
+
             }
         }
     }
@@ -102,5 +111,14 @@ public class User extends Subject implements UserComponent, Observer {
     @Override
     public int accept(UserComponentVisitor visitor) {
         return visitor.visit(this);
+    }
+
+    // HW 3
+    public long getCreationTime(){
+        return creationTime;
+    }
+
+    public long getUpdateTime(){
+        return lastUpdateTime;
     }
 }

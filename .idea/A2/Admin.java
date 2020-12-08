@@ -1,11 +1,14 @@
 // Alysia Wong
 // CS 3560 -- A2
 
-package minitwitter;
+package A2;
 
 import java.util.*;
+
+import A2visitors.*;
 import javafx.application.Application;
 import javafx.geometry.HPos;
+import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
@@ -13,7 +16,6 @@ import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 
 public class Admin extends Application {
-    Button showMessageTotal = new Button("Show Message Total");
     TreeView<UserComponent> treeView = new TreeView<>();
     private int userTotalSum = 0;
     private int groupTotalInt = 0;
@@ -53,9 +55,10 @@ public class Admin extends Application {
         groupID.setPrefSize(125,20);
         Button addUser = new Button("Add User");
         Button addGroup = new Button("Add Group");
-        Button openUserView = new Button("Open User View");
-        GridPane gridPane = new GridPane();
 
+        Button openUserView = new Button("Open User View");
+
+        GridPane gridPane = new GridPane();
         gridPane.add(userID, 1, 0);
         gridPane.add(groupID, 1, 1);
         gridPane.add(addUser, 2, 0);
@@ -67,15 +70,24 @@ public class Admin extends Application {
 
         Button showUserTotal = new Button("Show User Total");
         Button showGroupTotal = new Button("Show Group Total");
+        Button showMessageTotal = new Button("Show Message Total");
         Button showPositivePercentage = new Button ("Show Positive Percentage");
+
+        // HW 3 #1 and #4
+        Button validateButton = new Button ("Validate IDs");
+        Button lastUpdatedButton = new Button ("Last Updated User");
+
         GridPane gridPane1 = new GridPane();
         gridPane1.add(showUserTotal,0,0);
         gridPane1.add(showMessageTotal,0,1);
         gridPane1.add(showGroupTotal,1,0);
         gridPane1.add(showPositivePercentage,1,1);
+        gridPane1.add(validateButton,0,2);
+        gridPane1.add(lastUpdatedButton,1,2);
         gridPane1.setVgap(5);
         gridPane1.setHgap(5);
-        VBox vBox = new VBox(50, gridPane,gridPane1);
+        VBox vBox = new VBox(10, gridPane, openUserView, gridPane1);
+        vBox.setAlignment(Pos.CENTER);
         HBox hBox = new HBox(10, treeView, vBox);
 
         // BUTTON ACTIONS
@@ -95,7 +107,9 @@ public class Admin extends Application {
             selectedTreeItem.getChildren().add(userIDTreeItem);
             User addedUser = new User(userID.getText());
             userList.add(addedUser);
+            System.out.println("User Creation Time: " + addedUser.getCreationTime());
         });
+
         addGroup.setOnAction(event -> {
             for(int i = 0 ; i < userGroupList.size() ; i++){
                 if(userGroupList.get(i).getID().equals(groupID.getText())){
@@ -117,7 +131,9 @@ public class Admin extends Application {
             UserGroup newUserGroup = new UserGroup(groupID.getText());
             newUserGroup.setEnteries(newUserGroup);
             userGroupList.add(newUserGroup);
+            System.out.println("User Group Creation Time: " + newUserGroup.getCreationTime());
         });
+
         openUserView.setOnAction(event -> {
             TreeItem<UserComponent> selectedTreeItem = treeView.getSelectionModel().getSelectedItem();
             for (int i = 0 ; i < userList.size() ; i++){
@@ -178,6 +194,70 @@ public class Admin extends Application {
             positiveAlert.setContentText("Positive Messages Total: " + String.format("%.02f", positiveInt/currMessageInt * 100) +"%");
             positiveAlert.show();
         });
+
+        // HW 3 #1 -- Validates all the IDs
+        // Valid if all IDs are unique and contains no spaces
+        validateButton.setOnAction(event -> {
+            ArrayList totalID = new ArrayList();
+            int validInt; // 0 is invalid, 1 is valid
+
+            // Alert will inform user of validation results
+            Alert valid = new Alert(Alert.AlertType.INFORMATION);
+            valid.setTitle("Validation");
+            valid.setHeaderText("");
+            valid.setContentText("IDs are VALID");
+            System.out.println("Visiting Valid IDs...");
+
+            // Checking all the IDs of users
+            for (int i = 0 ; i < userList.size() ; i++){
+                validInt = userList.get(i).accept(new ValidVisitor());
+                if(validInt == 0 || totalID.contains(userList.get(i).getID())){
+                    valid.setContentText("Contains INVALID ID");
+                }
+                totalID.add(userList.get(i).getID());
+            }
+
+            // Checking all the IDs of user groups
+            for (int i = 0 ; i < userGroupList.size() ; i++){
+                validInt = (userGroupList.get(i).accept(new ValidVisitor()));
+                if(validInt == 0 || totalID.contains(userGroupList.get(i).getID())){
+                    valid.setContentText("Contains INVALID ID");
+                }
+                totalID.add(userGroupList.get(i).getID());
+            }
+            valid.show(); // display the validation results
+        });
+
+        // HW 3 #4 -- Alert will inform who was the user with the last update
+        lastUpdatedButton.setOnAction(event -> {
+            Alert lastUpdated = new Alert(Alert.AlertType.INFORMATION);
+            lastUpdated.setTitle("Last Updated User");
+            lastUpdated.setHeaderText("");
+
+            long lastUpdatedTime = 0;
+            long currentUsersTime;
+            int lastUser = -1;
+            System.out.println("Visiting Last Update User...");
+
+            // Evaluate which user has the most recent update time
+            for(int i = 0 ; i < userList.size() ; i++){
+                currentUsersTime = userList.get(i).accept(new LastUpdatedVisitor());
+                if(lastUpdatedTime < currentUsersTime){
+                    lastUpdatedTime = currentUsersTime;
+                    lastUser = i;
+                    System.out.println("User " + userList.get(lastUser).getID() + "'s Latest Update Time: " + lastUpdatedTime);
+                }
+            }
+
+            if(lastUser == -1){
+                lastUpdated.setContentText("No Feed Updates Yet");
+            }
+            else{
+                lastUpdated.setContentText("Last Updated User: " + userList.get(lastUser).getID());
+            }
+            lastUpdated.show();
+        });
+
         primaryStage.setTitle("Admin Control");
         hBox.setBackground(new Background(new BackgroundFill(Color.BEIGE,null,null)));
         Scene scene1 = new Scene(hBox, 550, 250);

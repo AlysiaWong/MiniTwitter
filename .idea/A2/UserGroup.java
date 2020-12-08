@@ -1,4 +1,7 @@
-package minitwitter;
+package A2;
+
+import A2.UserComponent;
+import A2visitors.UserComponentVisitor;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -9,20 +12,23 @@ public class UserGroup implements UserComponent {
     private int userGroupCount = 0;
     private String groupID;
     private List<UserComponent> enteries; //COMPOSITE PATTERN -- list of UserComponent (interface)
+    private long creationTime; // HW 3 #2
 
     public UserGroup(){
         userGroupCount++;
         enteries = new ArrayList<UserComponent>();
+        creationTime = this.creationTime = System.currentTimeMillis(); // HW 3 #2 -- new user group created
     }
 
     public UserGroup(String newID){
         userGroupCount++;
         enteries = new ArrayList<UserComponent>();
         groupID = newID;
+        creationTime = this.creationTime = System.currentTimeMillis(); // HW 3 #2 -- new user group created
     }
 
     public int getUserGroupCount(){
-       return userGroupCount;
+        return userGroupCount;
     }
 
     public void setEnteries(UserComponent newUser){
@@ -43,5 +49,10 @@ public class UserGroup implements UserComponent {
     @Override
     public int accept(UserComponentVisitor userGroupVisitor) {
         return userGroupVisitor.visit(this);
+    }
+
+    // HW 3
+    public long getCreationTime(){
+        return creationTime;
     }
 }
